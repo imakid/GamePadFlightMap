@@ -18,6 +18,10 @@ A gamepad-friendly flight point list overlay for World of Warcraft's taxi/flight
   飞行点搜索过滤
 - Toggle unreachable flight points visibility  
   切换不可达飞行点的显示/隐藏
+- Smart sorting: reachable first → most-used → nearest → alphabetical  
+  智能排序：可达优先 → 使用频率高优先 → 距离近优先 → 字母序
+- Flight frequency tracking and display  
+  飞行频率追踪与显示
 - Filter out current location automatically  
   自动过滤当前所在地
 - ESC key to close  
@@ -62,10 +66,12 @@ The overlay automatically appears when talking to a flight master.
 ### Slash Commands / 斜杠命令
 
 ```
-/gpfm debug   - Toggle debug mode / 切换调试模式
-/gpfm show    - Force show overlay / 强制显示面板
-/gpfm hide    - Force hide overlay / 强制隐藏面板
-/gpfm toggle  - Toggle overlay / 切换面板显示
+/gpfm debug      - Toggle debug mode / 切换调试模式
+/gpfm show       - Force show overlay / 强制显示面板
+/gpfm hide       - Force hide overlay / 强制隐藏面板
+/gpfm toggle     - Toggle overlay / 切换面板显示
+/gpfm stats      - Show flight statistics / 显示飞行统计
+/gpfm resetstats - Reset flight statistics / 重置飞行统计
 ```
 
 ## Configuration / 配置
@@ -75,6 +81,7 @@ Saved variables are stored in `GamePadFlightMapDB`:
 
 - `enabled` - Enable/disable the addon (default: true) / 启用/禁用插件（默认：启用）
 - `debugMode` - Enable debug logging (default: false) / 启用调试日志（默认：关闭）
+- `flightStats` - Flight frequency data per node name / 每个飞行点的飞行频率数据
 
 ## Compatibility / 兼容性
 

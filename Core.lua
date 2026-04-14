@@ -1,6 +1,6 @@
 local addonName, GPFM = ...
 
-GPFM.Version = "1.2.0"
+GPFM.Version = "1.3.0"
 
 -- ============================================================================
 -- Utility: Clamp
@@ -72,6 +72,37 @@ function GPFM.ApplyFilter()
             end
         end
     end
+
+    -- Smart sort: Reachability > Usage Frequency > Distance > Name
+    local flightStats = GamePadFlightMapDB and GamePadFlightMapDB.flightStats or {}
+    local centerX, centerY = 0.5, 0.5 -- Player position proxy on flight map
+
+    table.sort(GPFM.filteredNodes, function(a, b)
+        -- 1. Reachability: Reachable > Unreachable
+        local aReach = (a.state == Enum.FlightPathState.Reachable) and 1 or 0
+        local bReach = (b.state == Enum.FlightPathState.Reachable) and 1 or 0
+        if aReach ~= bReach then return aReach > bReach end
+
+        --[[ 2. Favorites (disabled)
+        local aFav = (flightStats.favorites and flightStats.favorites[a.name]) and 1 or 0
+        local bFav = (flightStats.favorites and flightStats.favorites[b.name]) and 1 or 0
+        if aFav ~= bFav then return aFav > bFav end
+        ]]
+
+        -- 3. Usage frequency: more used first
+        local aCount = flightStats[a.name] or 0
+        local bCount = flightStats[b.name] or 0
+        if aCount ~= bCount then return aCount > bCount end
+
+        -- 4. Distance: closer first (only when difference is meaningful)
+        local aDist = math.sqrt(((a.x or 0) - centerX) ^ 2 + ((a.y or 0) - centerY) ^ 2)
+        local bDist = math.sqrt(((b.x or 0) - centerX) ^ 2 + ((b.y or 0) - centerY) ^ 2)
+        if math.abs(aDist - bDist) > 0.0001 then return aDist < bDist end
+
+        -- 5. Alphabetical fallback
+        return (a.name or "") < (b.name or "")
+    end)
+
     if #GPFM.filteredNodes == 0 then
         GPFM.selectedIndex = 1
     else
@@ -223,6 +254,12 @@ function GPFM.TakeFlight(node)
     if node.state == Enum.FlightPathState.Unreachable then
         GPFM.Debug("Cannot fly to unreachable node:", node.name)
         return
+    end
+    -- Record flight frequency
+    if GamePadFlightMapDB and GamePadFlightMapDB.flightStats then
+        local name = node.name or "Unknown"
+        GamePadFlightMapDB.flightStats[name] = (GamePadFlightMapDB.flightStats[name] or 0) + 1
+        GPFM.Debug("Flight stats updated:", name, "=", GamePadFlightMapDB.flightStats[name])
     end
     GPFM.Debug("Flying to:", node.name, "slotIndex:", node.slotIndex)
     TakeTaxiNode(node.slotIndex)
@@ -419,9 +456,26 @@ function GPFM.AcquireButton(parent, index)
         -- Name
         button.Name = button:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         button.Name:SetPoint("LEFT", button.Icon, "RIGHT", 6, 0)
-        button.Name:SetPoint("RIGHT", -6, 0)
+        button.Name:SetPoint("RIGHT", -40, 0)
         button.Name:SetJustifyH("LEFT")
         button.Name:SetWordWrap(false)
+
+        -- Count text (flight frequency)
+        button.CountText = button:CreateFontString(nil, "OVERLAY", "GameFontDisable")
+        button.CountText:SetPoint("RIGHT", -6, 0)
+        button.CountText:SetJustifyH("RIGHT")
+        if GameFontDisable then
+            button.CountText:SetFont(GameFontDisable:GetFont(), 9)
+        end
+
+        --[[ Star icon for favorites (disabled)
+        button.Star = button:CreateTexture(nil, "ARTWORK")
+        button.Star:SetSize(14, 14)
+        button.Star:SetPoint("RIGHT", -6, 0)
+        button.Star:SetTexture("Interface\\COMMON\\FavoritesIcon")
+        button.Star:SetDesaturated(true)
+        button.Star:Hide()
+        ]]
 
         -- Double-click detection
         button.lastClickTime = 0
@@ -484,10 +538,30 @@ function GPFM.RefreshList()
     GPFM.MainFrame.ScrollChild:SetHeight(math.max(totalHeight, 1))
 
     -- Create/update buttons
+    local flightStats = GamePadFlightMapDB and GamePadFlightMapDB.flightStats or {}
     for i, node in ipairs(GPFM.filteredNodes) do
         local button = GPFM.AcquireButton(GPFM.MainFrame.ScrollChild, i)
         button.index = i
         button.Name:SetText(node.name or "Unknown")
+
+        -- Show flight count
+        local count = flightStats[node.name] or 0
+        if count > 0 then
+            button.CountText:SetText("|cFF88CCFF" .. count .. "|r")
+        else
+            button.CountText:SetText("")
+        end
+
+        --[[ Show favorite star (disabled)
+        local isFav = flightStats.favorites and flightStats.favorites[node.name]
+        if isFav then
+            button.Star:Show()
+            button.CountText:SetPoint("RIGHT", -22, 0)
+        else
+            button.Star:Hide()
+            button.CountText:SetPoint("RIGHT", -6, 0)
+        end
+        ]]
 
         local icon
         if node.state == Enum.FlightPathState.Reachable then
@@ -657,12 +731,35 @@ SlashCmdList["GPFM"] = function(msg)
         else
             GPFM.ShowOverlay()
         end
+    elseif msg == "stats" then
+        if GamePadFlightMapDB and GamePadFlightMapDB.flightStats then
+            print("|cFF00FF00[GPFM]|r Flight Stats:")
+            for name, count in pairs(GamePadFlightMapDB.flightStats) do
+                if type(count) == "number" then
+                    print("  " .. name .. ": " .. count)
+                end
+            end
+        else
+            print("|cFF00FF00[GPFM]|r No flight stats recorded yet")
+        end
+    elseif msg == "resetstats" then
+        if GamePadFlightMapDB then
+            GamePadFlightMapDB.flightStats = {}
+            print("|cFF00FF00[GPFM]|r Flight stats reset")
+        end
+    --[[ Favorites commands (disabled)
+    elseif msg == "fav" then
+        local node = GPFM.GetSelectedNode()
+        if node then GPFM.ToggleFavorite(node) end
+    ]]
     else
         print("|cFF00FF00[GPFM]|r Commands:")
-        print("  /gpfm debug - Toggle debug mode")
-        print("  /gpfm show  - Force show overlay")
-        print("  /gpfm hide  - Force hide overlay")
-        print("  /gpfm toggle - Toggle overlay")
+        print("  /gpfm debug      - Toggle debug mode")
+        print("  /gpfm show       - Force show overlay")
+        print("  /gpfm hide       - Force hide overlay")
+        print("  /gpfm toggle     - Toggle overlay")
+        print("  /gpfm stats      - Show flight statistics")
+        print("  /gpfm resetstats - Reset flight statistics")
     end
 end
 
@@ -676,8 +773,20 @@ function GPFM:OnLoad()
         GamePadFlightMapDB = {
             enabled = true,
             debugMode = false,
+            flightStats = {},
         }
     end
+
+    -- Ensure flightStats exists for existing DB
+    if not GamePadFlightMapDB.flightStats then
+        GamePadFlightMapDB.flightStats = {}
+    end
+
+    --[[ Favorites (disabled)
+    if not GamePadFlightMapDB.flightStats.favorites then
+        GamePadFlightMapDB.flightStats.favorites = {}
+    end
+    ]]
 
     GPFM.debugMode = GamePadFlightMapDB.debugMode
 

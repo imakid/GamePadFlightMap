@@ -1,6 +1,6 @@
 ## Interface: 120005, 120001
 ## X-Expansion: MAINLINE
-## Version: 1.2.0
+## Version: 1.3.0
 
 ## Title: GamePad Flight Map
 ## Notes: Gamepad-friendly flight point list overlay with map pin sync
