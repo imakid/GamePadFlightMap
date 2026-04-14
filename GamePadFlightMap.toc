@@ -1,0 +1,15 @@
+## Interface: 120005, 120001
+## X-Expansion: MAINLINE
+## Version: 1.2.0
+
+## Title: GamePad Flight Map
+## Notes: Gamepad-friendly flight point list overlay with map pin sync
+## Author: GamePadUI
+## SavedVariables: GamePadFlightMapDB
+
+## IconTexture: Interface\Icons\icon_petfamily_flying
+
+## OptionalDeps: Blizzard_FlightMap, ConsolePort
+
+Core.lua
+GamePad.lua

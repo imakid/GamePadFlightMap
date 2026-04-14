@@ -1,0 +1,17 @@
+# WoW cache files
+*.wdb
+*.lua.bak
+
+# OS files
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Generated images (not part of addon)
+generated-images/
