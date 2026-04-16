@@ -1,0 +1,33 @@
+name: Package and Release
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Package Addon
+        run: |
+          mkdir -p package/GamePadFlightMap
+          cp GamePadFlightMap.toc Core.lua GamePad.lua CHANGELOG.md README.md package/GamePadFlightMap/
+          VERSION=
+          cd package
+          zip -r "../GamePadFlightMap-.zip" GamePadFlightMap/
+          cd ..
+          echo "Created: GamePadFlightMap-.zip"
+          unzip -l "GamePadFlightMap-.zip"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: GamePadFlightMap-*.zip
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
