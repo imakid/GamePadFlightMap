@@ -15,19 +15,44 @@ jobs:
 
       - name: Package Addon
         run: |
-          mkdir -p package/GamePadFlightMap
-          cp GamePadFlightMap.toc Core.lua GamePad.lua CHANGELOG.md README.md package/GamePadFlightMap/
-          VERSION=
+          VERSION=${GITHUB_REF_NAME#v}
+          mkdir -p package/FlightMap_Gamepad
+          cp FlightMap_Gamepad.toc Core.lua GamePad.lua CHANGELOG.md README.md package/FlightMap_Gamepad/
+
+          # Generate release.json for WoWUp compatibility
+          cat > package/release.json << EOF
+          {
+            "releases": [
+              {
+                "name": "FlightMap_Gamepad",
+                "version": "v${VERSION}",
+                "filename": "FlightMap_Gamepad-v${VERSION}.zip",
+                "nolib": false,
+                "metadata": [
+                  {
+                    "flavor": "mainline",
+                    "interface": 120005
+                  }
+                ]
+              }
+            ]
+          }
+          EOF
+
           cd package
-          zip -r "../GamePadFlightMap-.zip" GamePadFlightMap/
+          zip -r "../FlightMap_Gamepad-v${VERSION}.zip" FlightMap_Gamepad/
+          cp release.json "../release.json"
           cd ..
-          echo "Created: GamePadFlightMap-.zip"
-          unzip -l "GamePadFlightMap-.zip"
+          echo "Created: FlightMap_Gamepad-v${VERSION}.zip"
+          unzip -l "FlightMap_Gamepad-v${VERSION}.zip"
+          cat release.json
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: GamePadFlightMap-*.zip
+          files: |
+            FlightMap_Gamepad-v*.zip
+            release.json
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
