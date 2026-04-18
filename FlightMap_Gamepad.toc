@@ -2,10 +2,12 @@
 ## X-Expansion: MAINLINE
 ## Version: 1.3.0
 
-## Title: GamePad Flight Map
+## Title: FlightMap Gamepad
+## Title-zhCN: 飞行地图掌机版
 ## Notes: Gamepad-friendly flight point list overlay with map pin sync
+## Notes-zhCN: 掌机友好的飞行点列表，支持地图标记同步
 ## Author: GamePadUI
-## SavedVariables: GamePadFlightMapDB
+## SavedVariables: FlightMap_GamepadDB
 
 ## IconTexture: Interface\Icons\icon_petfamily_flying
 

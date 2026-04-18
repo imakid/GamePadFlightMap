@@ -15,7 +15,7 @@ end
 -- ============================================================================
 function GPFM.Debug(...)
     if GPFM.debugMode then
-        print("|cFF00FF00[GPFM]|r", ...)
+        print("|cFF00FF00[FMGP]|r", ...)
     end
 end
 
@@ -74,7 +74,7 @@ function GPFM.ApplyFilter()
     end
 
     -- Smart sort: Reachability > Usage Frequency > Distance > Name
-    local flightStats = GamePadFlightMapDB and GamePadFlightMapDB.flightStats or {}
+    local flightStats = FlightMap_GamepadDB and FlightMap_GamepadDB.flightStats or {}
     local centerX, centerY = 0.5, 0.5 -- Player position proxy on flight map
 
     table.sort(GPFM.filteredNodes, function(a, b)
@@ -256,10 +256,10 @@ function GPFM.TakeFlight(node)
         return
     end
     -- Record flight frequency
-    if GamePadFlightMapDB and GamePadFlightMapDB.flightStats then
+    if FlightMap_GamepadDB and FlightMap_GamepadDB.flightStats then
         local name = node.name or "Unknown"
-        GamePadFlightMapDB.flightStats[name] = (GamePadFlightMapDB.flightStats[name] or 0) + 1
-        GPFM.Debug("Flight stats updated:", name, "=", GamePadFlightMapDB.flightStats[name])
+        FlightMap_GamepadDB.flightStats[name] = (FlightMap_GamepadDB.flightStats[name] or 0) + 1
+        GPFM.Debug("Flight stats updated:", name, "=", FlightMap_GamepadDB.flightStats[name])
     end
     GPFM.Debug("Flying to:", node.name, "slotIndex:", node.slotIndex)
     TakeTaxiNode(node.slotIndex)
@@ -301,8 +301,8 @@ end
 -- Show / Hide Overlay
 -- ============================================================================
 function GPFM.ShowOverlay()
-    GPFM.Debug("ShowOverlay called, DB=", GamePadFlightMapDB, "enabled=", GamePadFlightMapDB and GamePadFlightMapDB.enabled)
-    if not GamePadFlightMapDB or not GamePadFlightMapDB.enabled then
+    GPFM.Debug("ShowOverlay called, DB=", FlightMap_GamepadDB, "enabled=", FlightMap_GamepadDB and FlightMap_GamepadDB.enabled)
+    if not FlightMap_GamepadDB or not FlightMap_GamepadDB.enabled then
         GPFM.Debug("ShowOverlay skipped: disabled or DB missing")
         return
     end
@@ -538,7 +538,7 @@ function GPFM.RefreshList()
     GPFM.MainFrame.ScrollChild:SetHeight(math.max(totalHeight, 1))
 
     -- Create/update buttons
-    local flightStats = GamePadFlightMapDB and GamePadFlightMapDB.flightStats or {}
+    local flightStats = FlightMap_GamepadDB and FlightMap_GamepadDB.flightStats or {}
     for i, node in ipairs(GPFM.filteredNodes) do
         local button = GPFM.AcquireButton(GPFM.MainFrame.ScrollChild, i)
         button.index = i
@@ -643,7 +643,7 @@ end
 EventFrame:SetScript("OnEvent", function(self, event, ...)
     -- Always log events in debug mode to diagnose issues
     if GPFM.debugMode then
-        print("|cFF00FF00[GPFM]|r Event:", event, ...)
+        print("|cFF00FF00[FMGP]|r Event:", event, ...)
     end
 
     if event == "ADDON_LOADED" then
@@ -718,9 +718,9 @@ SlashCmdList["GPFM"] = function(msg)
     msg = (msg or ""):lower()
     msg = strtrim(msg)
     if msg == "debug" then
-        GamePadFlightMapDB.debugMode = not GamePadFlightMapDB.debugMode
-        GPFM.debugMode = GamePadFlightMapDB.debugMode
-        print("|cFF00FF00[GPFM]|r Debug mode:", GPFM.debugMode)
+        FlightMap_GamepadDB.debugMode = not FlightMap_GamepadDB.debugMode
+        GPFM.debugMode = FlightMap_GamepadDB.debugMode
+        print("|cFF00FF00[FMGP]|r Debug mode:", GPFM.debugMode)
     elseif msg == "show" then
         GPFM.ShowOverlay()
     elseif msg == "hide" then
@@ -732,20 +732,20 @@ SlashCmdList["GPFM"] = function(msg)
             GPFM.ShowOverlay()
         end
     elseif msg == "stats" then
-        if GamePadFlightMapDB and GamePadFlightMapDB.flightStats then
-            print("|cFF00FF00[GPFM]|r Flight Stats:")
-            for name, count in pairs(GamePadFlightMapDB.flightStats) do
+        if FlightMap_GamepadDB and FlightMap_GamepadDB.flightStats then
+            print("|cFF00FF00[FMGP]|r Flight Stats:")
+            for name, count in pairs(FlightMap_GamepadDB.flightStats) do
                 if type(count) == "number" then
                     print("  " .. name .. ": " .. count)
                 end
             end
         else
-            print("|cFF00FF00[GPFM]|r No flight stats recorded yet")
+            print("|cFF00FF00[FMGP]|r No flight stats recorded yet")
         end
     elseif msg == "resetstats" then
-        if GamePadFlightMapDB then
-            GamePadFlightMapDB.flightStats = {}
-            print("|cFF00FF00[GPFM]|r Flight stats reset")
+        if FlightMap_GamepadDB then
+            FlightMap_GamepadDB.flightStats = {}
+            print("|cFF00FF00[FMGP]|r Flight stats reset")
         end
     --[[ Favorites commands (disabled)
     elseif msg == "fav" then
@@ -753,7 +753,7 @@ SlashCmdList["GPFM"] = function(msg)
         if node then GPFM.ToggleFavorite(node) end
     ]]
     else
-        print("|cFF00FF00[GPFM]|r Commands:")
+        print("|cFF00FF00[FMGP]|r Commands:")
         print("  /gpfm debug      - Toggle debug mode")
         print("  /gpfm show       - Force show overlay")
         print("  /gpfm hide       - Force hide overlay")
@@ -769,8 +769,8 @@ end
 function GPFM:OnLoad()
     GPFM.Debug("GamePadFlightMap loaded")
 
-    if not GamePadFlightMapDB then
-        GamePadFlightMapDB = {
+    if not FlightMap_GamepadDB then
+        FlightMap_GamepadDB = {
             enabled = true,
             debugMode = false,
             flightStats = {},
@@ -778,17 +778,17 @@ function GPFM:OnLoad()
     end
 
     -- Ensure flightStats exists for existing DB
-    if not GamePadFlightMapDB.flightStats then
-        GamePadFlightMapDB.flightStats = {}
+    if not FlightMap_GamepadDB.flightStats then
+        FlightMap_GamepadDB.flightStats = {}
     end
 
     --[[ Favorites (disabled)
-    if not GamePadFlightMapDB.flightStats.favorites then
-        GamePadFlightMapDB.flightStats.favorites = {}
+    if not FlightMap_GamepadDB.flightStats.favorites then
+        FlightMap_GamepadDB.flightStats.favorites = {}
     end
     ]]
 
-    GPFM.debugMode = GamePadFlightMapDB.debugMode
+    GPFM.debugMode = FlightMap_GamepadDB.debugMode
 
     GPFM.InitGamePad()
 
@@ -798,5 +798,5 @@ function GPFM:OnLoad()
         GPFM.ShowOverlay()
     end
 
-    GPFM.Debug("Initialization complete, enabled=", GamePadFlightMapDB.enabled)
+    GPFM.Debug("Initialization complete, enabled=", FlightMap_GamepadDB.enabled)
 end

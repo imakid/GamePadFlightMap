@@ -1,4 +1,4 @@
-# GamePadFlightMap
+# FlightMap_Gamepad
 
 A gamepad-friendly flight point list overlay for World of Warcraft's taxi/flight map.
 
@@ -30,8 +30,8 @@ A gamepad-friendly flight point list overlay for World of Warcraft's taxi/flight
 ## Installation / 安装
 
 1. Download or clone this repository / 下载或克隆本仓库
-2. Copy the `GamePadFlightMap` folder to your WoW addon directory:  
-   将 `GamePadFlightMap` 文件夹复制到 WoW 插件目录：
+2. Copy the `FlightMap_Gamepad` folder to your WoW addon directory:  
+   将 `FlightMap_Gamepad` 文件夹复制到 WoW 插件目录：
    - **Retail**: `World of Warcraft\_retail_\Interface\AddOns\`
    - **Classic**: `World of Warcraft\_classic_\Interface\AddOns\`
 3. Restart WoW or reload UI (`/reload`) / 重启 WoW 或重载界面（`/reload`）
@@ -76,8 +76,8 @@ The overlay automatically appears when talking to a flight master.
 
 ## Configuration / 配置
 
-Saved variables are stored in `GamePadFlightMapDB`:  
-保存的变量存储在 `GamePadFlightMapDB` 中：
+Saved variables are stored in `FlightMap_GamepadDB`:  
+保存的变量存储在 `FlightMap_GamepadDB` 中：
 
 - `enabled` - Enable/disable the addon (default: true) / 启用/禁用插件（默认：启用）
 - `debugMode` - Enable debug logging (default: false) / 启用调试日志（默认：关闭）
